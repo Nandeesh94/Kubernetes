@@ -454,3 +454,45 @@ spec:
 
 kubectl apply -f quota.yaml
 
+
+
+
+
+
+---------------------------------------------------------------------------------------
+ubuntu@ip-172-31-30-156:~$ history
+    1  sudo -i
+    2  kubectl get nodes
+    3  kubectl get pod
+    4  kubectl get pods --all --namespaces
+    5  kubectl get pods --all-namespaces
+    6  kubeadm token create --print-join-command
+    7  kubectl get nodes
+    8  kubeget pods
+    9  kubectl get po
+   10  kubectl get pod --all-namespaces
+   11  kubectl get nodes
+   12  kubectl run nginx-demo --image=nginx --port=80
+   13  kubectl get po
+   14  kubectl api-resources
+   15  kubectl get ns
+   16  kubectl get pv
+   17  kubectl get pvc
+   18  kubectl get deploy
+   19  kubectl get svc
+   20  kubectl get po
+   21  kubectl get ns
+   22  kubectl get pod
+   23  kubectl create ns test
+   24  kubectl get -n ns test
+   25  kubectl get pod -n test
+   26  kubectl get -n kube-system
+   27  kubectl get pod -n kube-system
+   28  kubectl get pod -n test
+   29  kubectl get pod --all-namespaces
+   30  kubectl get pod -A
+   31  kubectl get pod -o wide
+   32  kubeget pod -o wide -A
+   33  kubectl get pod -o wide -A
+   34  history
+
