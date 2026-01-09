@@ -354,7 +354,7 @@ Here are some key commands and YAML examples related to Kubernetes namespaces:
 ------------------------
 
 
-Create a namespace using a YAML file, as shown earlier:
+Create a namespace using a YAML file, as shown earlier: 
 
 apiVersion: v1
 kind: Namespace
