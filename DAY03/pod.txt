@@ -87,6 +87,9 @@ spec:
         
 save: app1.yaml
 
+ubuntu@ip-172-31-23-87:~$ kubectl apply -f nandeesh-namespace.yml --dry-run=client
+pod/nandeesh-pod configured (dry run)
+
 apply: kubectl apply -f app1.yaml
 
 
