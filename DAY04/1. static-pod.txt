@@ -119,5 +119,20 @@ If the Nginx container inside the static pod crashes or stops, the Kubelet will 
 1. No Scheduler: Static Pods are not scheduled, meaning you cannot use the regular scheduling mechanisms like Deployments, ReplicaSets, or StatefulSets to scale them or ensure distribution across nodes.
 
 2. Hard to Manage at Scale: Since static pods are not managed by the API server, they are harder to manage in larger clusters where you might want higher-level abstractions.
+-----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+==========================
+INTERVIEW Quations
+==========================
+🧠 Interview-ready answer (you can use this)
+
+“Mirror pods are read-only representations of static pods. Deleting them with kubectl has no effect. The only way to stop a static pod is to remove its manifest from the kubelet staticPodPath.”
+
+That’s a senior-level Kubernetes answer.
+
+
 
  
