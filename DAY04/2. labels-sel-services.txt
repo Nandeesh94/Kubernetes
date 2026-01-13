@@ -74,8 +74,21 @@ spec:
 
  kubectl describe pod <pod-name> -n <Name-space>
 
+
+----------------------------------------------------------------------------------------------------------------
+
+
+Critical Kubernetes rule (this is interview-grade)
+
+Static pods can run without appearing in kubectl
+crictl is the source of truth, not kubectl.
+
+This is normal, supported, and used in production.
 How to display only labels?
-----------------------------
+--------------------------------------------------------------------------------------------------------------------
+
+
+
 
 kubectl get po <pod-name> -n <Name-space> --show-labels
 
