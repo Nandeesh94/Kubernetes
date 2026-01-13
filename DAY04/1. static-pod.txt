@@ -127,12 +127,18 @@ If the Nginx container inside the static pod crashes or stops, the Kubelet will 
 ==========================
 INTERVIEW Quations
 ==========================
-🧠 Interview-ready answer (you can use this)
+1. Interview-ready answer (you can use this)
 
 “Mirror pods are read-only representations of static pods. Deleting them with kubectl has no effect. The only way to stop a static pod is to remove its manifest from the kubelet staticPodPath.”
 
 That’s a senior-level Kubernetes answer.
 
+-------------------------------------------------------------------
+2.Critical Kubernetes rule (this is interview-grade)
 
+Static pods can run without appearing in kubectl
+crictl is the source of truth, not kubectl.
 
+This is normal, supported, and used in production.
+How to display only labels?
  
