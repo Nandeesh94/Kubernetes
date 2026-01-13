@@ -78,7 +78,13 @@ spec:
 ----------------------------------------------------------------------------------------------------------------
 To enter the inside Pod:
 kubectl exec -it -n default <Pod name> -- /bin/bash
+---------------------------------------------------
+Run a temporary BusyBox pod  (this is temporary)  
+BusyBox includes ping by default:
+kubectl run net-debug -it --rm --image=busybox --restart=Never -- sh
+ping 10.36.0.2
 
+-----------------------------------------------------
 
 --------------------------------------------------------------------------------------------------------------------
 
