@@ -213,6 +213,55 @@ kubeadm init
 #kubeadm init --control-plane-endpoint "PUBLIC_IP:PORT"
 
 IF Error
+#1️⃣ Install missing dependencies (conntrack)
+sudo apt update
+sudo apt install -y conntrack
+
+Verify:
+which conntrack
+
+3️⃣ Restart containerd:
+sudo systemctl restart containerd
+sudo systemctl enable containerd
+sudo systemctl status containerd
+
+4️⃣ Reset previous failed kubeadm setup
+sudo kubeadm reset -f
+
+Then clean networking:
+sudo rm -rf /etc/cni/net.d
+
+5️⃣ Initialize Kubernetes again:
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16
+
+Wait 2–3 minutes.
+
+If successful you will see:
+
+Your Kubernetes control-plane has initialized successfully!
+
+6️⃣ Configure kubectl for ubuntu user:
+mkdir -p $HOME/.kube
+sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+7️⃣ Verify cluster
+kubectl get nodes
+NAME            STATUS     ROLES           AGE
+ip-xxx-xxx      NotReady   control-plane
+
+8️⃣ Install CNI network (required)
+Install Calico:
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+Wait 1 minute then check:
+
+kubectl get nodes:
+STATUS: Ready
+
+
+
+
+
 #sudo kubeadm init --cri-socket /run/containerd/containerd.sock
 
 
