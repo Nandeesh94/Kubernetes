@@ -181,8 +181,85 @@ spec:
   type: ClusterIP
 
 
-========================================================
+===================================================================================================================
+#Nandeesh
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hpadeplmnt
+  labels:
+    name: hpadeplmnt
+  namespace: prod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      name: hpapod
+  template:
+    metadata:
+      labels:
+        name: hpapod
+    spec:
+      containers:
+      - name: hpacont1
+        image: k8s.gcr.io/hpa-example
+        ports:
+        - name: http
+          containerPort: 80
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "300Mi"
+          limits:
+            cpu: "300m"
+            memory: "400Mi"
+---
+#HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: 
+  name: hpa-autoscalingpod
+  namespace: prod
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hpadeplmnt
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 30
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+---
+#Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: hpaservice
+  namespace: prod
+spec:
+  type: NodePort
+  selector:
+    name: hpapod
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30256
+    
+          
 
+
+=====================================================================================================================
 
 # ==== Execute below commands to increase load====
 
