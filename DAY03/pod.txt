@@ -182,5 +182,28 @@ tomcat
 Jenkins
 
 mongo
+===========================================================================================================
+
+IF VSCode not connected follow this steps
+
+1. Clean the Old "Fingerprints"
+Open git bash (as Administrator).
+
+Run this command to completely wipe that IP from your known hosts:
+C: ssh-keygen -R 54.157.235.79
+
+VS Code's background script is not designed to answer questions. You must answer the security question manually before VS Code attempts to connect.
+In your terminal, run the connection manually:
+C: ssh -i "C:\Users\pathw\Downloads\sindhu-key-pair.pem" ubuntu@54.157.235.79
+
+When it asks: Are you sure you want to continue connecting (yes/no/[fingerprint])?
+Type yes and hit Enter.
+Once you see the ubuntu@... prompt,
+
+3. Simplify the VS Code Config
+Host k8s-master
+    HostName 54.157.235.79
+    User ubuntu
+    IdentityFile "C:\Users\pathw\Downloads\sindhu-key-pair.pem"
 
 
