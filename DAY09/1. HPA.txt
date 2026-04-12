@@ -37,7 +37,41 @@ spec:
 
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
+-----------------------------
+Your Action Plan:
+Check if Metrics Server is alive: kubectl get pods -n kube-system | grep metrics
 
+If it's not there: Install it using the command above.
+
+Wait 2 minutes: Let the data collect.
+
+Check HPA again: kubectl get hpa -n prod
+
+Once you see percentages instead of <unknown>, watch what happens to your Pod count! Do you want me to show you how to patch the Metrics Server for a kubeadm lab environment if it still shows unknown?
+The Metrics Server is not installed
+
+1. Install the Metrics Server:
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+1.1: Edit the deployment:
+kubectl edit deployment metrics-server -n kube-system
+Scroll down to the args: section (around line 140) and add the following line:
+- --kubelet-insecure-tls
+
+2. The "Kubeadm" Fix (Crucial)
+2.1: Edit the deployment::
+C: kubectl edit deployment metrics-server -n kube-system
+2.2: Scroll down to the args: section (around line 140) and add the following line:
+- --kubelet-insecure-tls
+containers:
+      - args:
+        - --cert-dir=/tmp
+        - --secure-port=4443
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-use-node-status-port
+        - --metric-resolution=15s
+        - --kubelet-insecure-tls    # <--- Add this line!
+
+Save and exit (:wq in vim).
 
 metric server set-up
 ====================
@@ -54,17 +88,18 @@ metric server set-up
 
 --> kubectl edit deploy metrics-server -n kube-system
 
---> 
 
-spec:
-      containers:
-      - args:
-        - --cert-dir=/tmp
-        - --secure-port=10250
-        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
-        - --kubelet-use-node-status-port
-        - --metric-resolution=15s
-        - --kubelet-insecure-tls  ---> add this line
+3. Verification
+Once you save that edit, wait about 60 seconds, then run:
+
+Check if it's running:
+kubectl get pods -n kube-system | grep metrics
+(You should now see a pod in Running status).
+
+Check the HPA again:
+kubectl get hpa -n prod
+
+
 
 
 =========================================================================
