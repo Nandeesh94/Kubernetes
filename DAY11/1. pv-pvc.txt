@@ -10,8 +10,9 @@ spec:
     storage: 1Gi  # Adjust as necessary
   accessModes:
     - ReadWriteMany  # NFS supports this
+  persistentVolumeReclaimPolicy: Retain   # Added this so your data isn't deleted if the PVC is deleted
   nfs:
-    server: 172.31.11.218  # Your NFS server IP
+    server: 172.31.11.218  # Your NFS server pvt IP
     path: /mnt/nfs_share  # Path on your NFS server
 
 
