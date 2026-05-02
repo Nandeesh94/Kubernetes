@@ -161,4 +161,19 @@ kubectl get pvc -n prod
 kubectl get pv
 
 Re-Deploy 
+------------------------------------------------------------------------------------------------------------------
 
+IF YOU SEE THE PODS ERROR LIKE THIS.
+ubuntu@ip-172-31-22-141:~$ kubectl get all -n prod
+NAME                                    READY   STATUS             RESTARTS        AGE
+pod/mongopod-rs-zj28s                   1/1     Running            0               7m35s
+pod/springapp-dplmnt-5f5b7f679c-fg9rb   0/1     CrashLoopBackOff   6 (4m50s ago)   17m
+pod/springapp-dplmnt-5f5b7f679c-lq6d9   1/1     Running            0               49s
+pod/springapp-dplmnt-5f5b7f679c-mbx22   1/1     Running            7 (5m52s ago)   17m
+pod/springapp-dplmnt-5f5b7f679c-mrdrl   0/1     OOMKilled          7 (6m6s ago)    17m
+
+like CrashLoopBackOff   OOMKilled
+first increse the instance type and follow the above pv and pvc finally once delete all old pods again rs will create immidiatly freshly .
+Run this cmd
+C: kubectl delete pod -l app=springapp-pod-dplmnt -n prod    # delete the all old pods.
+C: kubectl get pods -n prod
