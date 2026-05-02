@@ -125,4 +125,31 @@ spec:
    
 
 NOTE: pv and pvc are 1 to 1 relationship
+====================================================================================================
 
+1. Force-Remove the PV Lock.
+Now that  the PV might still be stuck. Run this to clear the PV:
+ubuntu@ip-172-31-22-141:~$ kubectl get pvc -n prod
+NAME         STATUS        VOLUME      CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+mongodbpvc   Terminating   mongodbpv   1Gi        RWX                           <unset>                 24h
+
+if show this error 
+STATUS
+Terminating
+Run this cmd.
+C: kubectl patch pv mongodbpv -p '{"metadata":{"finalizers":null}}'
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+2.Force-Remove the PVC Lock.
+This will make the PVC disappear immediately.
+ubuntu@ip-172-31-22-141:~$ kubectl get pv -n prod
+NAME        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS        CLAIM                VOLUMEATTRIBUTESCLASS   REASON   AGE
+mongo-pv    1Gi        RWX            Retain           Terminating   prod/mongo-pvc                   <unset>              6d1h
+mongodbpv   1Gi        RWX            Retain           Terminating   prod/mongodbpvc                  <unset>               24h
+
+if show this error 
+STATUS
+Terminating
+Run this cmd.
+C: kubectl patch pvc mongodbpvc -n prod -p '{"metadata":{"finalizers":null}}'
