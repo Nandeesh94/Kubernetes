@@ -126,6 +126,7 @@ spec:
 
 NOTE: pv and pvc are 1 to 1 relationship
 ====================================================================================================
+why we use this because anythig changes in PV or PVC first delete the existing pv and pvc and redeploy.
 
 1. Force-Remove the PV Lock.
 Now that  the PV might still be stuck. Run this to clear the PV:
@@ -153,3 +154,11 @@ STATUS
 Terminating
 Run this cmd.
 C: kubectl patch pvc mongodbpvc -n prod -p '{"metadata":{"finalizers":null}}'
+
+----------------------------------------------------------------------------------------
+Verify They are Gone.
+kubectl get pvc -n prod
+kubectl get pv
+
+Re-Deploy 
+
