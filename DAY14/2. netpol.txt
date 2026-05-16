@@ -330,15 +330,229 @@ NOTE: add nameSpace slector and check the connection
 	 ns=test-ns
 
 
+=================================================================================================================================
+
+NETWORK POLICY:
+------- ------
+You can create 3 different pods in Kubernetes to practice:
+
+MongoDB database pod
+Spring Boot application pod
+Maven web app pod (Tomcat Java app)
+
+Then apply NetworkPolicy rules between them.
+
+Architecture:
+spring-app  ---> mongodb
+maven-webapp ---> spring-app
+
+You can practice:
+Allow only Spring app to access MongoDB
+Block Maven app from MongoDB
+Allow Maven app to talk only to Spring app
+Test deny-all policies.
 
 
+Step 1 — Create Namespace
+kubectl create namespace netpol-lab.
 
 
+Step 2 — MongoDB Pod + Service.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mongodb
+  namespace: netpol-lab
+  labels:
+    app: mongodb
+spec:
+  containers:
+  - name: mongodb
+    image: mongo
+    ports:
+    - containerPort: 27017
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-svc
+  namespace: netpol-lab
+spec:
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
 
 
+Apply:
 
-   
+kubectl apply -f mongodb.yaml
 
+
+Step 3 — Spring Boot App Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: spring-app
+  namespace: netpol-lab
+  labels:
+    app: spring-app
+spec:
+  containers:
+  - name: spring-app
+    image: bitnami/spring-boot:latest
+    ports:
+    - containerPort: 8080
+
+Apply:
+
+kubectl apply -f spring-app.yaml
+
+Step 4 — Maven Web App Pod
+
+This uses Tomcat as Java web app server.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: maven-webapp
+  namespace: netpol-lab
+  labels:
+    app: maven-webapp
+spec:
+  containers:
+  - name: maven-webapp
+    image: tomcat:9
+    ports:
+    - containerPort: 8080
+
+Apply:
+
+kubectl apply -f maven-webapp.yaml
+
+Step 5 — Verify Pods
+kubectl get pods -n netpol-lab -o wide
+
+Expected:
+
+mongodb
+spring-app
+maven-webapp
+
+Step 6 — Test Connectivity BEFORE NetworkPolicy
+
+Enter Spring app:
+kubectl exec -it spring-app -n netpol-lab -- sh
+
+Install tools:
+
+apt update
+apt install -y telnet
+
+Test MongoDB:
+
+telnet mongodb-svc 27017
+
+It should connect.
+
+Step 7 — Create DENY ALL Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: netpol-lab
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+Apply:
+
+kubectl apply -f deny-all.yaml
+
+Now all incoming traffic is blocked.
+
+Step 8 — Allow ONLY Spring App → MongoDB
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-spring-to-mongodb
+  namespace: netpol-lab
+spec:
+  podSelector:
+    matchLabels:
+      app: mongodb
+
+  policyTypes:
+  - Ingress
+
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: spring-app
+
+    ports:
+    - protocol: TCP
+      port: 27017
+
+Apply:
+
+kubectl apply -f allow-spring-mongo.yaml
+
+Step 9 — Testing
+Spring App → MongoDB
+
+Should work:
+
+kubectl exec -it spring-app -n netpol-lab -- sh
+telnet mongodb-svc 27017
+
+Maven Web App → MongoDB
+
+Should FAIL:
+
+kubectl exec -it maven-webapp -n netpol-lab -- sh
+telnet mongodb-svc 27017
+
+This is the real NetworkPolicy learning.
+
+Useful Practice Scenarios
+
+Try these next:
+| Scenario                  | Learn               |
+| ------------------------- | ------------------- |
+| Deny all ingress          | Zero trust          |
+| Allow namespace traffic   | Namespace isolation |
+| Allow specific pod labels | Microsegmentation   |
+| Allow only TCP 27017      | Port restriction    |
+| Add Egress policy         | Outbound control    |
+| Block internet access     | Security hardening  |
+
+
+Best Practice
+
+Instead of Pods, real projects use Deployments.
+
+Later convert:
+
+Pod → Deployment
+
+because Pods are temporary.
+
+You can practice:
+
+Deployments
+Services
+Ingress
+Helm
+ArgoCD
+Jenkins
+DevSecOps tools
+
+on this same EKS cluster.
     
 
 
