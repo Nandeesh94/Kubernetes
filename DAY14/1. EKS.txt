@@ -6,7 +6,7 @@ EKS Cluster autoscaling  Newly created:
 ------------------------
 eksctl create cluster --name Nandeesh-cluster \
 --region us-east-1 \
---node-type t2.medium \
+--node-type t2.small \
 --nodes 2 \
 --managed                
 
@@ -17,9 +17,20 @@ EKS Cluster autoscaling  Scale Down:  (over night scale down)
 eksctl scale nodegroup \
   --cluster=Nandeesh-cluster \
   --region=us-east-1 \
-  --name=ng-ac7e3c55 \
+  --name=ng-6f1eae99 \
   --nodes=0 \
   --nodes-min=0       
+
+----------------------------------
+
+After:
+------
+eksctl get nodegroup \
+--cluster Nandeesh-cluster \
+--region us-east-1
+
+---------------------------------
+
 
 ===============================================================================================================================
 
@@ -29,6 +40,28 @@ EKS Cluster autoscaling  Scale Up:    (morning scale up)
 eksctl scale nodegroup \
   --cluster=Nandeesh-cluster \
   --region=us-east-1 \
-  --name=ng-ac7e3c55 \
+  --name=ng-6f1eae99 \
   --nodes=2 \
   --nodes-min=2
+
+
+----------------------
+After:
+------
+eksctl get nodegroup \
+--cluster Nandeesh-cluster \
+--region us-east-1
+
+----------------------------
+You should eventually see:
+DESIRED CAPACITY   0
+Then the two t2.small worker nodes will terminate automatically and EKS charges reduce significantly.
+
+
+=================================================================================================================================
+
+eksctl delete cluster Nandeesh-cluster --region us-east-1
+
+
+
+
