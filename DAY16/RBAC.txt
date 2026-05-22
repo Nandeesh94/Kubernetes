@@ -222,6 +222,8 @@ Meaning of Each
 Core API group:
 pods
 services
+nodes
+namespaces
 configmaps
 secrets
 
