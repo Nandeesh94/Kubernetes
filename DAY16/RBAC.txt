@@ -217,6 +217,134 @@ roleRef:
 MY PRACTICE :
 --- -------
 
+Meaning of Each
+[""]
+Core API group:
+pods
+services
+configmaps
+secrets
+
+["*"]
+Kubernetes API Groups Overview:
+Kubernetes APIs
+│
+├── Core API Group ("")
+├── apps
+├── batch
+├── autoscaling
+├── networking.k8s.io
+├── rbac.authorization.k8s.io
+├── storage.k8s.io
+├── policy
+├── cert-manager.io
+├── monitoring.coreos.com
+
+1.Core API Group ("")
+   Resource           Purpose              
+| --------------- | --------------------- |
+| pods            | Containers            |
+| services        | Networking            |
+| configmaps      | Config                |
+| secrets         | Sensitive data        |
+| namespaces      | Namespace             |
+| nodes           | Worker nodes          |
+| pvc             | PersistentVolumeClaim |
+| pv              | PersistentVolume      |
+| endpoints       | Service endpoints     |
+| serviceaccounts | Pod identity          |
+| events          | Cluster events        |
+
+2. Apps API Group
+apiGroups: ["apps"]
+    Resource                Purpose          
+| ------------------- | ---------------- |
+| deployments         | Stateless apps   |
+| statefulsets        | Stateful apps    |
+| daemonsets          | One pod per node |
+| replicasets         | Pod replicas     |
+| controllerrevisions | Internal history |
+
+3. Batch API Group
+apiGroups: ["batch"]
+  Resource     Purpose        
+| -------- | -------------- |
+| jobs     | One-time tasks |
+| cronjobs | Scheduled jobs |
+
+Example:
+Database backup every night
+
+4. Autoscaling API Group
+apiGroups: ["autoscaling"]
+| Resource                 | Purpose      |
+| ------------------------ | ------------ |
+| horizontalpodautoscalers | Auto scaling |
+Example:
+Scale pods based on CPU
+
+
+5. Networking API Group
+apiGroups: ["networking.k8s.io"]
+| Resource        | Purpose                  |
+| --------------- | ------------------------ |
+| ingresses       | External access          |
+| networkpolicies | Pod firewall rules       |
+| ingressclasses  | Ingress controller types |
+
+6. RBAC API Group
+apiGroups: ["rbac.authorization.k8s.io"]
+| Resource            | Purpose               |
+| ------------------- | --------------------- |
+| roles               | Namespace permissions |
+| rolebindings        | Attach role           |
+| clusterroles        | Cluster permissions   |
+| clusterrolebindings | Attach cluster role   |
+
+
+-------------------------------------------------------------------------------
+
+1.Very Important Real Commands
+See all resources:
+C:kubectl api-resources
+
+2.See Specific API Group
+Apps
+kubectl api-resources --api-group=apps
+
+3.Networking
+kubectl api-resources --api-group=networking.k8s.io
+
+4.Batch
+kubectl api-resources --api-group=batch
+-------------------------------------------
+1..Job Manager
+apiGroups: ["batch"]
+resources: ["jobs", "cronjobs"]
+verbs: ["*"]
+
+2.Networking Admin
+apiGroups: ["networking.k8s.io"]
+resources: ["ingresses", "networkpolicies"]
+verbs: ["*"]
+
+4.Storage Viewer
+apiGroups: ["storage.k8s.io"]
+resources: ["storageclasses"]
+verbs: ["get", "list"]
+
+--------------------
+Core API → Pods & Services
+Apps API → Deployments
+Batch API → Jobs
+Networking API → Ingress & Netpol
+RBAC API → Permissions
+Storage API → Volumes
+
+--------------------------------
+
+
+
 [ ROLES & ROLEBINDING ]
 
 RBAC:
