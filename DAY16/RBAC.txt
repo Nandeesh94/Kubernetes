@@ -115,34 +115,52 @@ But we are not able to list kubectl get po, etc
 
 step 6: connect to linux machine where we have k8s admin cli access.
 -------
-
+-----------------------------------------
 kubectl get cm -n kube-system
 
 cm: aws-auth
 
 NOTE: add users
-
+----------------------------------------------------------------------------------------
 kubectl edit cm aws-auth -n kube-system
 
 
 apiVersion: v1
 data:
   mapRoles: |
-    - groups:
+    - rolearn: arn:aws:iam::972293797238:role/eksctl-Nandeesh-cluster-nodegroup--NodeInstanceRole-pg8pGswPqnnS
+      groups:
       - system:bootstrappers
       - system:nodes
-      rolearn: arn:aws:iam::418295704475:role/EKS-worker-role-class
       username: system:node:{{EC2PrivateDNSName}}
   mapUsers: |
-    - userarn: arn:aws:iam::418295704475:user/prasanth
-      username: prasanth
+    - userarn: arn:aws:iam::972293797238:user/ravi       #1st user for example super admin access
+      username: ravi
+      groups:
+      - system:masters
+    - userarn: arn:aws:iam::972293797238:user/auditor    #2nd user for example developers(Dev namespace users)if you add some add.
+      username: auditor
+      groups:
+      - auditors
 kind: ConfigMap
 metadata:
-  creationTimestamp: "2024-10-11T07:12:50Z"
+  creationTimestamp: "2026-05-21T05:46:03Z"
   name: aws-auth
   namespace: kube-system
-  resourceVersion: "52395"
-  uid: fe764e06-c2ec-4f84-bc3b-5732c1ebfaeb
+  resourceVersion: "283482"
+  uid: 446cb1f3-15df-4524-b88d-240e50d6b7d8
+-----------------------------------------------------------
+Important Built-In System Groups:
+| Group                  | Purpose             |
+| ---------------------- | ------------------- |
+| system:masters         | Super admin         |
+| system:nodes           | Worker nodes        |
+| system:bootstrappers   | Node bootstrap      |
+| system:authenticated   | All logged-in users |
+| system:unauthenticated | Anonymous users     |
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 
