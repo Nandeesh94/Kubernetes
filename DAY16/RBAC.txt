@@ -459,7 +459,355 @@ roleRef:
 [CLUSTER & CLUSTERBINDING ]
 
 
+These are closer to real DevOps/DevSecOps production environments.
 
+1. Cluster Admin Access
+
+Full control over entire cluster.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ravi-cluster-admin
+
+subjects:
+- kind: User
+  name: ravi
+  apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+Test:
+
+kubectl auth can-i delete nodes --as=ravi
+
+Expected:
+yes
+
+------------------------------------------------------------------------------------
+2. Read-Only Entire Cluster
+
+Good for auditors/security teams.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: readonly-all
+
+rules:
+- apiGroups: ["", "apps", "batch"]
+  resources: ["pods","services","deployments","jobs","nodes","namespaces"]
+  verbs: ["get","list","watch"]
+
+Binding:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: readonly-all-binding
+
+subjects:
+- kind: User
+  name: auditor
+  apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  kind: ClusterRole
+  name: readonly-all
+  apiGroup: rbac.authorization.k8s.io
+
+Test:
+
+kubectl auth can-i list nodes --as=auditor
+kubectl auth can-i delete pods --as=auditor
+
+-----------------------------------------------------------------
+3. Node Management Access
+
+Allow node viewing/draining.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: node-manager
+
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get","list","watch","patch","update"]
+
+Binding:
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-manager-binding
+
+subjects:
+- kind: User
+  name: sre-user
+  apiGroup: rbac.authorization.k8s.io
+
+roleRef:
+  kind: ClusterRole
+  name: node-manager
+  apiGroup: rbac.authorization.k8s.io
+
+Practice:
+kubectl auth can-i patch nodes --as=sre-user
+---------------------------------------------------------------------------
+
+
+4. HPA Cluster Access
+
+Useful for autoscaling teams.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: hpa-manager
+
+rules:
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get","list","create","update","delete"]
+--------------------------------------------------------------------------------------
+
+
+5. Namespace Creator
+
+Allow creating namespaces cluster-wide.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: namespace-manager
+
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["create","get","list","delete"]
+
+Test:
+
+kubectl auth can-i create namespaces --as=ravi
+---------------------------------------------------------------------------------
+
+
+6. Secret Admin (Dangerous Practice)
+
+Very important DevSecOps example.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-admin
+
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get","list","create","update","delete"]
+
+Test carefully:
+
+kubectl auth can-i get secrets --as=security-user -A
+----------------------------------------------------------------------------
+
+
+7. Ingress Controller Permissions
+
+Practice for ingress administrators.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ingress-manager
+
+rules:
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get","list","create","update","delete"]
+
+------------------------------------------------------------------------
+
+
+8. Persistent Volume Admin
+
+Storage management practice.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: storage-admin
+
+rules:
+- apiGroups: [""]
+  resources: ["persistentvolumes","persistentvolumeclaims"]
+  verbs: ["get","list","create","delete"]
+
+----------------------------------------------------------------------------
+
+
+9. Monitoring Team Access
+
+For Prometheus/Grafana teams.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: monitoring-reader
+
+rules:
+- apiGroups: [""]
+  resources: ["pods","nodes","services","endpoints"]
+  verbs: ["get","list","watch"]
+
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods","nodes"]
+  verbs: ["get","list"]
+
+---------------------------------------------------------------------------
+
+
+10. Jenkins CI/CD Cluster Access
+
+Real-world DevOps example.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jenkins-deployer
+
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["create","update","patch","get","list"]
+
+- apiGroups: [""]
+  resources: ["services","pods"]
+  verbs: ["get","list"]
+
+Bind to ServiceAccount:
+
+subjects:
+- kind: ServiceAccount
+  name: jenkins
+  namespace: dev
+
+------------------------------------------------------------------------------
+
+11. ArgoCD Full Deployment Role
+
+GitOps practice.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-sync-role
+
+rules:
+- apiGroups: ["", "apps", "networking.k8s.io"]
+  resources: ["*"]
+  verbs: ["*"]
+
+------------------------------------------------------------------------------------
+
+
+12. Security Restricted User
+
+Only view pods/logs.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: support-user
+
+rules:
+- apiGroups: [""]
+  resources: ["pods","pods/log"]
+  verbs: ["get","list","watch"]
+
+Cannot exec into pods:
+
+kubectl auth can-i create pods/exec --as=support-user
+
+Expected:
+
+no
+-----------------------------------------------------------------------------------
+
+
+13. View Only Events
+
+Troubleshooting practice.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: event-reader
+
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get","list","watch"]
+
+------------------------------------------------------------------------------
+
+
+14. Allow Exec Into Pods
+
+Very sensitive permission.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pod-exec-user
+
+rules:
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+
+Test:
+
+kubectl auth can-i create pods/exec --as=ravi
+15. Real Interview Practice
+
+Create users with these roles:
+
+User	           Role
+ravi	        deployment-admin
+arun	        readonly
+jenkins	  ci-cd deployer
+argocd	  gitops admin
+auditor	  cluster readonly
+sre-user	  node manager
+security-user secret auditor
+
+
+Important Commands
+See ClusterRoles:
+kubectl get clusterroles
+
+See ClusterRoleBindings:
+
+kubectl get clusterrolebindings
+
+Describe:
+
+kubectl describe clusterrole readonly-all
+
+Permission check:
+
+kubectl auth can-i get pods --as=ravi -A
+
+Delete:
+
+kubectl delete clusterrole readonly-all
+kubectl delete clusterrolebinding readonly-all-binding
 
 
 
