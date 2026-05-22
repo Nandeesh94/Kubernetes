@@ -212,11 +212,123 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 
+====================================================================================================================================================================================================================================================================
+
+MY PRACTICE :
+--- -------
+
+[ ROLES & ROLEBINDING ]
+
+RBAC:
+
+ Read-only access 
+
+1.vim HPA-reader-role.yml 
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hpa-reader-binding
+  namespace: prod
+rules:
+- apiGroups: ["autoscaling"]
+  resources: ["horizontalpodautoscalers"]
+  verbs: ["get", "list"]
+
+
+2.vim HPA-reader-rolebinding.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hpa-reader-binding
+  namespace: prod
+subjects:
+- kind: User
+  name: ravi
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: hpa-reader-binding
+  apiGroup: rbac.authorization.k8s.io[ec2-user@ip-172-31-20-34 ~]$
 
 
 
+kubectl apply -f HPA-reader-role.yml
+kubectl apply -f HPA-reader-rolebinding.yml
+
+kubectl auth can-i delete hpa --as=ravi -n prod
+
+---------------------------------------------------------------------------
+
+vim deployment-manager-role.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-manager
+  namespace: prod
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
 
 
+
+vim deployment-manager-rolebinding.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-manager-binding
+  namespace: prod
+subjects:
+- kind: User
+  name: ravi
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: deployment-manager
+  apiGroup: rbac.authorization.k8s.io
+
+                  (verb)
+kubectl auth can-i delete deployment --as=ravi -n prod
+
+---------------------------------------------------------------------------------------------------
+
+vim new-employee-observation-role.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: new-employee-observation
+  namespace: dev
+rules:
+- apiGroups: ["apps", "", "networking.k8s.io",]
+  resources: ["*"]
+  verbs: ["get", "list", "watch"]
+
+
+vim new-emploee-observation-rolebinding.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: new-employee-observation-binding
+  namespace: dev
+subjects:
+- kind: User
+  name: ravi
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: new-employee-observation
+  apiGroup: rbac.authorization.k8s.io
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+[CLUSTER & CLUSTERBINDING ]
 
 
 
