@@ -54,18 +54,39 @@ rm get_helm.sh
 A typical Helm chart structure looks like this:
 
 jio-stg-om-chart/
-  ├── Chart.yaml        # Metadata about the chart
+  ├── Chart.yaml        # Metadata about the chart (name, version)
   ├── values.yaml       # Default configuration values for templates
   ├── charts/           # Subcharts (if any)
-  └── templates/        # Template files for Kubernetes resources
+  └── templates/        # Template files for Kubernetes resources (Kubernetes YAML templates)
       ├── deployment.yaml   
       ├── service.yaml
       └── pv.yaml
+      ├── secret.yaml
+      └── pvc.yaml
 
 
+What is a Helm Chart?
+A Helm chart is a collection of files that describe:
+Kubernetes Deployments
+Services
+ConfigMaps
+Secrets
+PVCs
+Ingress rules
+
+👉 All bundled together so you can install an app in one command.
 
 
-
+Why charts are useful
+Without Helm charts:
+You write 100+ lines YAML manually ❌
+With Helm charts:
+One command installs everything ✅
+------------------------------------------------------------------------
+Interview Question:
+One-line definition
+👉 A Helm chart is a predefined Kubernetes application package used to deploy complex apps using simple commands.
+------------------------------------------------------------------------------
 6. Templating
 --------------
 Helm uses Go templates to generate Kubernetes manifests dynamically. You can use placeholders in your templates, which get replaced by values from values.yaml or from command-line parameters when deploying.
