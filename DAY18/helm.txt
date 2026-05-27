@@ -494,9 +494,121 @@ Helm dependency charts
 
 
 
+Convert to REAL production replicaset
+Because standalone → replicaset upgrade is unsafe:
+----------------------------------------------------------
+Use corrected production values
+Create prod-values.yaml
+
+📄 PRODUCTION-GRADE FIXED values.yaml
+architecture: replicaset
+
+replicaCount: 3
+
+auth:
+  enabled: true
+  rootUser: root
+  rootPassword: "StrongPassword@123"
+  replicaSetKey: "StrongReplicaKey123"
+
+replicaSetName: rs0
+replicaSetHostnames: true
+
+persistence:
+  enabled: true
+  storageClass: gp3
+  size: 20Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
+podAntiAffinityPreset: hard
+
+metrics:
+  enabled: true
+
+image:
+  tag: 8.3.2   # IMPORTANT: avoid latest
+--------------------------------------------
+
+1. Install using values file
+helm install my-mongo bitnami/mongodb -n prod -f prod-values.yml
+
+2. Upgrade using values file
+helm upgrade my-mongo bitnami/mongodb -n prod -f prod-values.yml
+
+If namespace doesn't exist
+kubectl create ns prod
+
+Quick check before install
+helm template my-mongo bitnami/mongodb -f prod-values.yml
+👉 This shows YAML output without installing (safe dry-run)
+-------------------------------------------------------------------
 
 
+Install clean production cluster
+helm install my-mongo bitnami/mongodb -n prod -f values-prod.yaml
 
+What you will get after fix
+✔ True production MongoDB
+mongo-0  → Primary
+mongo-1  → Secondary
+mongo-2  → Secondary
+
+
+✔ High availability
+Auto failover
+Replica sync
+Zero single point of failure
+
+✔ Production safety
+Fixed image version
+Stable storage class (gp3)
+Resource limits
+Anti-affinity scheduling
+
+
+🚀 If you want next level
+
+I can help you upgrade this into:
+
+🔥 Production EKS architecture
+MongoDB + Ingress + External Access
+AWS EBS gp3 tuning
+Automated backups to S3
+Prometheus + Grafana dashboards
+Jenkins CI/CD Helm pipeline
+
+Just tell me 👍
+
+👍 If you want next step
+
+I can help you:
+
+Reinstall clean 3-node MongoDB replicaset in prod namespace
+Fix storage (gp3 + EBS tuning)
+Expose MongoDB safely (LoadBalancer / Ingress)
+Or 
+build full EKS production architecture diagram
+
+Just tell me 👍
+
+
+🚀 If you want next step
+
+I can help you:
+
+Validate your prod-values.yml for production correctness
+Fix MongoDB replicaset issues (if any)
+Or 
+build a full EKS + MongoDB production architecture
+
+Just tell me 👍
 
 
 
