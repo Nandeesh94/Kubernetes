@@ -45,6 +45,16 @@ eksctl scale nodegroup \
   --nodes-min=2
 
 
+-------------------------------------------
+If not storage or CPU so.. increse the nodes:
+
+eksctl create nodegroup \
+  --cluster Nandeesh-cluster \
+  --region us-east-1 \
+  --name large-ng \
+  --node-type t3.medium \
+  --nodes 2
+
 ----------------------
 After:
 ------
