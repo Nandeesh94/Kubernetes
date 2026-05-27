@@ -376,11 +376,87 @@ helm uninstall mavenwebapp -n <NS>
 
 
 
+====================================================================================================================================================================================================================================================================
 
 
 
+HELM:
+----
+What is Helm?
+
+Helm = Package Manager for Kubernetes
+
+Just like:
+
+| Technology | Package Manager |
+| ---------- | --------------- |
+| Ubuntu     | apt             |
+| Python     | pip             |
+| NodeJS     | npm             |
+| Kubernetes | Helm            |
 
 
+Important Helm Concepts:
+| Concept     | Meaning                        |
+| ----------- | ------------------------------ |
+| Chart       | Kubernetes application package |
+| Repository  | Store for charts               |
+| Release     | Installed chart instance       |
+| values.yaml | Custom configuration           |
+| templates/  | Dynamic YAML templates         |
+
+
+Architecture of HELM:
+Helm Chart
+    ↓
+Templates + values.yaml
+    ↓
+Generated Kubernetes YAML
+    ↓
+Applied to cluster
+-------------------------------
+
+Step 1 — Install Helm:
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+Check:
+helm version
+
+Step 2 — Add Helm Repository
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+Update:
+helm repo update
+
+Step 3 — Search Charts
+Example:
+helm search repo nginx
+OR
+helm search repo mysql
+
+Step 4 — Install Application
+Example nginx:
+helm install my-nginx bitnami/nginx
+
+Understand:
+| Part          | Meaning      |
+| ------------- | ------------ |
+| my-nginx      | Release name |
+| bitnami/nginx | Chart        |
+
+Check Resources
+kubectl get all
+
+Check Helm Releases
+helm list
+
+Example:
+NAME        NAMESPACE   REVISION
+my-nginx    default     1
+
+Step 5 — Uninstall
+helm uninstall my-nginx
+Removes all resources created by chart.
 
 
 
