@@ -459,7 +459,37 @@ helm uninstall my-nginx
 Removes all resources created by chart.
 
 
+Most Used Helm Commands:
 
+| Command            | Purpose            |
+| ------------------ | ------------------ |
+| `helm install`     | install app        |
+| `helm list`        | list releases      |
+| `helm upgrade`     | update app         |
+| `helm uninstall`   | remove app         |
+| `helm show values` | see default values |
+| `helm pull`        | download chart     |
+
+
+Remember this:
+Chart.yaml      → chart info
+values.yaml     → settings
+templates/      → kubernetes yaml
+charts/         → dependencies
+
+
+
+Next you should learn:
+-------- ---------
+Helm install flow
+Helm upgrade
+Helm rollback
+Helm template rendering
+Create your own Helm chart
+Helm variables deeply
+Helm with Ingress
+Helm with PVC
+Helm dependency charts
 
 
 
