@@ -55,6 +55,16 @@ eksctl create nodegroup \
   --node-type t3.medium \
   --nodes 2
 
+------------------------------------------
+
+EKS Cluster autoscaling  Scale Up:    (morning scale up)
+
+eksctl scale nodegroup \
+  --cluster Nandeesh-cluster \
+  --region us-east-1 \
+  --name large-ng \
+  --nodes 2 \
+  --nodes-min 2
 ----------------------
 After:
 ------
