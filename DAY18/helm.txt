@@ -641,7 +641,7 @@ Just tell me 👍
 | helm repo update | Update repo    |
 | helm search repo | Search charts  |
 | helm install     | Install app    |
-| helm list        | Show releases  |
+| helm list        | Show releases  |(Verify what Helm created)
 | helm upgrade     | Upgrade app    |
 | helm rollback    | Rollback       |
 | helm uninstall   | Delete app     |
@@ -739,8 +739,29 @@ Change to:
 service:
   type: NodePort
   port: 80
+OR
+service:
+  type: LoadBalancer
 
+4️⃣ Add resource limits (VERY important DevOps concept)
+In values.yaml:
 
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+5️⃣ Enable autoscaling (optional)
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+------------------------------------------------
 *.Why Keep Default values.yaml?
 
 Because Helm generated:
@@ -760,3 +781,9 @@ Jenkins
 ArgoCD
 autoscaling
 ingress
+
+
+---------------------------------------------------------------------------------
+
+
+
