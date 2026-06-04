@@ -56,6 +56,24 @@ eksctl create nodegroup \
   --nodes 2
 
 ------------------------------------------
+============================================================================================
+
+Deploying Applications to AWS EKS from Jenkins:
+
+eksctl create cluster \
+--cluster Nandeesh-cluster  \
+--region us-east-1 \
+--nodegroup-name large-ng1 \
+--node-type t3.medium \
+--nodes 2 \
+--nodes-min 2 \
+--nodes-max 3 \
+--managed
+
+
+
+
+============================================================================================
 
 EKS Cluster autoscaling  Scale Up:    (morning scale up)
 
