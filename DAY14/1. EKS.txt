@@ -61,15 +61,14 @@ eksctl create nodegroup \
 Deploying Applications to AWS EKS from Jenkins:
 
 eksctl create cluster \
---cluster Nandeesh-cluster  \
---region us-east-1 \
---nodegroup-name large-ng1 \
---node-type t3.medium \
---nodes 2 \
---nodes-min 2 \
---nodes-max 3 \
---managed
-
+  --name Nandeesh-cluster \
+  --region us-east-1 \
+  --nodegroup-name large-ng1 \
+  --node-type t3.medium \
+  --nodes 2 \
+  --nodes-min 2 \
+  --nodes-max 3 \
+  --managed
 
 
 
