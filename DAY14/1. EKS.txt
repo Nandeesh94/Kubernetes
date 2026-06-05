@@ -71,6 +71,29 @@ eksctl create cluster \
   --managed
 
 
+--------------------------------------------
+
+EKS Cluster autoscaling  Scale Down:  (over night scale down)
+
+eksctl scale nodegroup \
+  --cluster Nandeesh-cluster \
+  --region us-east-1 \
+  --name large-ng1 \
+  --nodes 0 \
+  --nodes-min 0 \
+  --nodes-max 3
+----------------------------------------------------
+EKS Cluster autoscaling  Scale Up:    (morning scale up)
+
+eksctl scale nodegroup \
+  --cluster Nandeesh-cluster \
+  --region us-east-1 \
+  --name large-ng1 \
+  --nodes 2 \
+  --nodes-min 2 \
+  --nodes-max 3
+
+
 
 ============================================================================================
 
