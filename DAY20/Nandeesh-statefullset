@@ -276,3 +276,21 @@ Paste the output after you attach the policy and restart the controller.
 
 
 
+
+12. Common Interview Question
+
+Deployment vs StatefulSet
+
+| Feature          | Deployment | StatefulSet |
+| ---------------- | ---------- | ----------- |
+| Stable Pod Name  | ❌          | ✅           |
+| Stable Storage   | ❌          | ✅           |
+| Ordered Startup  | ❌          | ✅           |
+| Ordered Shutdown | ❌          | ✅           |
+| Headless Service | ❌          | ✅           |
+| Databases        | ❌          | ✅           |
+| Stateless Apps   | ✅          | ❌           |
+
+
+
+
