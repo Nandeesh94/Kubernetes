@@ -116,3 +116,163 @@ Then:
 app-0
 This protects clustered applications.
 
+--------------------------------------------------
+cReate Headless-service to statfullset.
+
+1.vim headless-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+spec:
+  clusterIP: None
+  selector:
+    app: mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+-----------------------------------------
+
+2.vim statefulset.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: mongodb
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: mongodb
+
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6
+        ports:
+        - containerPort: 27017
+
+        volumeMounts:
+        - name: data
+          mountPath: /data/db
+
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+
+    spec:
+      accessModes:
+      - ReadWriteOnce
+
+      storageClassName: gp2
+
+
+      resources:
+        requests:
+          storage: 5Gi
+ubuntu@ip-172-31-32-247:~$
+
+--------------------------------------------
+--------------------------------------------
+
+If in-case aws-ebs-csi-driver is not installed (if it's not pvc won't work)
+ANd Attach the IAM policy also:
+---------------------------------
+aws iam list-attached-role-policies \
+  --role-name eksctl-Nandeesh-cluster-nodegroup--NodeInstanceRole-EinSkUtVz11o        #this cmd will show what is the roles attahed to this policy.
+
+If not installed: AmazonEBSCSIDriverPolicy.
+
+Install it:
+
+ubuntu@ip-172-31-32-247:~$ aws eks create-addon \
+  --cluster-name Nandeesh-cluster \
+  --addon-name aws-ebs-csi-driver \
+  --region us-east-1
+
+-------------------------------------------------------------------
+Attch the IAM policy:
+You can do it from the AWS Console.
+
+Step 1: Open IAM Roles
+
+Go to:
+
+AWS IAM Console - Roles
+
+Step 2: Search for your node role
+
+Search for:
+
+eksctl-Nandeesh-cluster-nodegroup--NodeInstanceRole-EinSkUtVz11o
+
+Click the role.
+
+Step 3: Add Permission
+
+Inside the role:
+
+Permissions tab
+    ↓
+Add permissions
+    ↓
+Attach policies
+Step 4: Search for the EBS CSI policy
+
+Search:
+
+AmazonEBSCSIDriverPolicy
+
+Select:
+
+AmazonEBSCSIDriverPolicy
+
+Click:
+
+Add permissions
+Step 5: Verify
+
+You should then see:
+
+AmazonSSMManagedInstanceCore
+AmazonEKS_CNI_Policy
+AmazonEKSWorkerNodePolicy
+AmazonEC2ContainerRegistryPullOnly
+AmazonEBSCSIDriverPolicy
+
+attached to the role.
+
+Step 6: Restart the EBS CSI controller
+
+Back on your EC2 instance:
+
+kubectl rollout restart deployment ebs-csi-controller -n kube-system
+
+Wait 1–2 minutes and check:
+
+kubectl get pods -n kube-system
+
+The EBS CSI controller pods should move from:
+
+CrashLoopBackOff
+
+to:
+
+6/6 Running
+
+Then check:
+
+kubectl get pvc
+kubectl get pods
+
+Paste the output after you attach the policy and restart the controller.
+
+
+
