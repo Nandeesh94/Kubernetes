@@ -1,0 +1,57 @@
+Init Container:
+----- -------
+These are very common Kubernetes interview topics.
+Init Container
+An Init Container runs before the main application container starts.
+Think of it as a setup or preparation container.
+Init Container 1
+      ↓
+Init Container 2
+      ↓
+Main Container
+The main container will not start until all init containers finish successfully.
+
+
+1.vim init-cont.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-container-demo
+  namespace: test-ns
+spec:
+  containers:
+  - name: main-app
+    image: busybox
+
+
+
+
+
+Interview Questions
+What is an Init Container?
+
+A special container that runs before the main container and must finish successfully before the application starts.
+
+Why use Init Containers?
+Wait for database
+Download files
+Configure environment
+Database migrations
+What is a Sidecar Container?
+
+A secondary container running alongside the main container in the same Pod to provide supporting functionality such as logging, monitoring, proxying, or security.
+
+Give real-world Sidecar examples.
+Fluentd for logs
+Envoy in Istio
+Nginx reverse proxy
+Monitoring agents
+Easy way to remember
+Init Container
+=
+Prepare the house before people enter.
+
+Sidecar Container
+=
+Security guard staying with the house all day.
