@@ -11,7 +11,7 @@ Init Container 2
 Main Container
 The main container will not start until all init containers finish successfully.
 
-
+---------------------------------------------------------------------------------------------
 1.vim init-cont.yaml
 
 apiVersion: v1
@@ -23,11 +23,245 @@ spec:
   containers:
   - name: main-app
     image: busybox
+    command:
+    - sh
+    - -c
+    - echo Main App Running; sleep 3600
+
+  initContainers:
+  - name: wait-for-mongodb
+    image: busybox
+    command:
+    - sh
+    - -c
+    - |
+      until nc -z mongodb 27017
+      do
+        echo "Waiting for MongoDB..."
+        sleep 5
+      done  
+------------------------------------------------------------------------------------------------------
+
+Why do we need this?
+
+Imagine:
+
+MongoDB Pod      -> Starting
+Spring Boot Pod  -> Starting
+
+If Spring Boot starts first and tries to connect:
+
+mongodb:27017
+
+MongoDB may not be ready yet.
+
+Result:
+
+Connection Refused
+Application Crash
+
+The Init Container prevents that.
+
+Step 1
+name: wait-for-mongodb
+
+Init Container name:
+
+wait-for-mongodb
+Step 2
+image: busybox
+
+Uses a lightweight Linux image.
+
+BusyBox contains tools like:
+
+sh
+nc
+wget
+ping
+sleep
+Step 3
+command:
+- sh
+- -c
+
+Equivalent to:
+
+sh -c "<script>"
+
+Runs the shell script below.
+
+Step 4
+until nc -z mongodb 27017
+What is nc?
+
+nc = Netcat
+
+Used to test network connectivity.
+
+Example:
+
+nc -z mongodb 27017
+
+Meaning:
+
+Try connecting to host:
+mongodb
+
+Port:
+27017
+
+MongoDB default port is:
+
+27017
+What does -z mean?
+nc -z mongodb 27017
+
+-z means:
+
+Check if port is open
+Don't send data
+
+Just test connectivity.
+
+Example
+
+If MongoDB is running:
+
+nc -z mongodb 27017
+
+returns:
+
+Success
+
+Exit code:
+
+0
+
+If MongoDB is not ready:
+
+nc -z mongodb 27017
+
+returns:
+
+Connection refused
+
+Exit code:
+
+1
+Step 5
+until nc -z mongodb 27017
+
+The shell keyword:
+
+until
+
+means:
+
+Keep looping UNTIL command succeeds
+
+Equivalent logic:
+
+While MongoDB is NOT reachable
+    keep waiting
+Step 6
+do
+  echo "Waiting for MongoDB..."
+  sleep 5
+done
+
+Every 5 seconds:
+
+Waiting for MongoDB...
+
+is printed.
+
+Then:
+
+sleep 5
+
+Waits 5 seconds.
+
+Then checks MongoDB again.
+
+Timeline Example
+Time 0
+
+MongoDB not ready.
+
+nc -z mongodb 27017
+
+fails.
+
+Output:
+
+Waiting for MongoDB...
+Time 5 sec
+
+Checks again.
+
+Still fails.
+
+Output:
+
+Waiting for MongoDB...
+Time 10 sec
+
+Checks again.
+
+Still fails.
+
+Output:
+
+Waiting for MongoDB...
+Time 15 sec
+
+MongoDB becomes ready.
+
+nc -z mongodb 27017
+
+succeeds.
+
+Loop ends.
+
+Init Container exits successfully.
+
+Then
+
+Kubernetes starts the main container.
+
+Init Container Finished
+          ↓
+Spring Boot Starts
+Visual Flow
+Pod Created
+      |
+      v
+Init Container Starts
+      |
+      v
+Check mongodb:27017
+      |
+      +----Not Ready----+
+      |                 |
+      |                 v
+      |        Sleep 5 Seconds
+      |                 |
+      +-----------------+
+      |
+      v
+MongoDB Ready
+      |
+      v
+Init Container Exits
+      |
+      v
+Main Container Starts
 
 
 
 
-
+====================================================================================================
 Interview Questions
 What is an Init Container?
 
