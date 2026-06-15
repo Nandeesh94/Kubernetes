@@ -343,28 +343,28 @@ spec:
 
   containers:
 
-  - name: app
-    image: busybox
+  - name: main-app
+    image: nginx
     command:
     - sh
     - -c
     - |
       while true
       do
-        date >> /shared/log.txt
+        date >> /shared/app.log
         sleep 5
       done
     volumeMounts:
     - name: shared
       mountPath: /shared
 
-  - name: sidecar
+  - name: sidecar-log-agent
     image: busybox
     command:
     - sh
     - -c
     - |
-      tail -f /shared/log.txt
+      tail -f /shared/app.log
     volumeMounts:
     - name: shared
       mountPath: /shared
@@ -383,7 +383,7 @@ Container 1 = main-app
 Container 2 = sidecar
 
 Verify both containers:
-kubectl describe pod side-car-demo
+kubectl describe pod side-car-demo -c 
 
 You should see:
 Containers:
@@ -394,7 +394,7 @@ Containers:
 Check logs from the sidecar:
 
 View sidecar logs:
-kubectl logs sidecar-demo -c sidecar
+kubectl logs sidecar-demo -c sidecar-log-agent
 
 Output:
 Mon Jun 15 06:10:01 UTC 2026
