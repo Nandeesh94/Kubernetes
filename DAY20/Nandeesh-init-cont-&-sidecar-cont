@@ -289,3 +289,139 @@ Prepare the house before people enter.
 Sidecar Container
 =
 Security guard staying with the house all day.
+
+
+===============================================================================================================================================================================
+
+
+
+2. Sidecar Container:
+---------- --------
+
+A Sidecar Container is a container that runs alongside the main application container in the same Pod.
+
+Think of it like this:
+
+Pod
+├── Main Container (Application)
+└── Sidecar Container (Helper)
+
+Both containers:
+
+Run at the same time
+Share the same network (same Pod IP)
+Can share the same volume
+Start together and stop together
+
+1.Examples
+Shared Volume Example
+volumes:
+- name: shared-data
+  emptyDir: {}
+
+Mounted in both containers:
+volumeMounts:
+- name: shared-data
+  mountPath: /shared
+
+Both can access:
+/shared
+
+1.Simple Sidecar Demo:
+
+vim Sidecar.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-demo
+
+spec:
+  volumes:
+  - name: shared
+    emptyDir: {}
+
+  containers:
+
+  - name: app
+    image: busybox
+    command:
+    - sh
+    - -c
+    - |
+      while true
+      do
+        date >> /shared/log.txt
+        sleep 5
+      done
+    volumeMounts:
+    - name: shared
+      mountPath: /shared
+
+  - name: sidecar
+    image: busybox
+    command:
+    - sh
+    - -c
+    - |
+      tail -f /shared/log.txt
+    volumeMounts:
+    - name: shared
+      mountPath: /shared
+
+Apply:
+kubectl apply -f sidecar.yaml
+
+Check pod:
+kubectl get pods
+
+Expected:
+side-car-demo   2/2   Running
+
+Notice 2/2 Running:
+Container 1 = main-app
+Container 2 = sidecar
+
+Verify both containers:
+kubectl describe pod side-car-demo
+
+You should see:
+Containers:
+  main-app
+  sidecar
+
+
+Check logs from the sidecar:
+
+View sidecar logs:
+kubectl logs sidecar-demo -c sidecar
+
+Output:
+Mon Jun 15 06:10:01 UTC 2026
+Mon Jun 15 06:10:06 UTC 2026
+Mon Jun 15 06:10:11 UTC 2026
+
+The main container writes timestamps into /shared/log.txt, and the sidecar continuously reads that file using tail -f.
+
+This is a classic sidecar pattern: one container produces data, the other container consumes or processes it.
+The sidecar is reading what the main container writes.
+
+Interview Questions
+What is a Sidecar Container?
+A helper container that runs with the main application container in the same Pod and provides supporting functionality
+such as logging, monitoring, proxying, configuration updates, or security.
+
+
+Difference Between Init Container and Sidecar:
+| Feature                  | Init Container            | Sidecar Container          |
+| ------------------------ | ------------------------- | -------------------------- |
+| Runs before app          | Yes                       | No                         |
+| Runs with app            | No                        | Yes                        |
+| Must finish successfully | Yes                       | No                         |
+| Runs continuously        | No                        | Yes                        |
+| Common use               | Setup, checks, migrations | Logging, monitoring, proxy |
+
+
+Exam/Interview One-Line Answer
+"A Sidecar Container is a helper container running in the same Pod as the application container, sharing network and storage,
+and providing supporting services such as logging, monitoring, service mesh proxying, or configuration management."
