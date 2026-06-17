@@ -1,0 +1,345 @@
+Canary Deployment (Complete Explanation):
+------ ---------   ---------------------
+Canary Deployment is a deployment strategy where you release a new version of an application to a small percentage of users first.
+If everything works correctly,you gradually roll it out to everyone. If issues are found, 
+you quickly roll back without affecting most users.
+
+Why use Canary Deployment?
+
+Imagine you have an application running:
+
+Version 1 (Stable)
+10 Pods
+100% of users
+
+You develop Version 2 with new features.
+
+Instead of replacing all 10 pods immediately, you deploy only 1 pod with Version 2.
+
+Version 1
+9 Pods
+
+Version 2
+1 Pod
+
+Only a small portion of traffic reaches Version 2.
+
+If Version 2 has bugs:
+
+Only a small number of users are affected.
+You can roll back quickly.
+The majority of users continue using Version 1.
+Normal Deployment vs Canary
+Normal (Rolling Update)
+Old Pods
+10
+
+↓
+
+9 Old + 1 New
+
+↓
+
+8 Old + 2 New
+
+↓
+
+...
+
+↓
+
+10 New
+
+Eventually, everyone uses the new version.
+
+Canary Deployment
+Version 1
+9 Pods
+
+Version 2
+1 Pod
+
+Monitor:
+
+Errors
+CPU
+Memory
+User feedback
+Response time
+
+If everything is healthy:
+
+Version 1
+7 Pods
+
+Version 2
+3 Pods
+
+Later:
+
+Version 1
+5 Pods
+
+Version 2
+5 Pods
+
+Finally:
+
+Version 2
+10 Pods
+Real Example
+
+Suppose you own an e-commerce website.
+
+Current version:
+
+v1
+
+New version:
+
+v2
+
+You receive:
+
+100,000 users/day
+
+Instead of exposing all users to v2:
+
+95%
+↓
+
+v1
+
+5%
+↓
+
+v2
+
+If there are no problems after several hours:
+
+80%
+
+↓
+
+v1
+
+20%
+
+↓
+
+v2
+
+Eventually:
+
+100%
+
+↓
+
+v2
+Traffic Distribution
+
+Without a service mesh or ingress controller capable of traffic splitting, Kubernetes Services load-balance roughly based on the number of matching pods.
+
+Example:
+
+10 Pods
+
+8 v1
+2 v2
+
+Approximate traffic:
+
+80%
+
+↓
+
+v1
+
+20%
+
+↓
+
+v2
+
+
+Kubernetes Example
+
+Stable Deployment:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-v1
+
+spec:
+  replicas: 9
+
+  selector:
+    matchLabels:
+      app: myapp
+      version: v1
+
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: v1
+
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.25
+-------------------------------------------------
+
+Canary Deployment:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-v2
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: myapp
+      version: v2
+
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: v2
+
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.26
+Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+
+spec:
+  selector:
+    app: myapp
+
+  ports:
+  - port: 80
+---------------------------------------------------------
+Notice:
+
+The Service selects only:
+
+selector:
+  app: myapp
+
+It doesn't care about:
+
+version: v1
+version: v2
+
+Both deployments have:
+
+app: myapp
+
+Therefore, both receive traffic.
+
+How Traffic Flows
+User
+   │
+   ▼
+Service
+   │
+   ├─────────────┐
+   │             │
+   ▼             ▼
+v1 Pod        v2 Pod
+
+The Service sends requests to both sets of pods because both match the selector.
+
+Gradual Rollout
+
+Step 1
+
+v1 = 9 Pods
+
+v2 = 1 Pod
+
+Step 2
+
+v1 = 7 Pods
+
+v2 = 3 Pods
+
+Step 3
+
+v1 = 5 Pods
+
+v2 = 5 Pods
+
+Step 4
+
+v1 = 0 Pods
+
+v2 = 10 Pods
+
+Delete:
+
+kubectl delete deployment app-v1
+Rollback
+
+If Version 2 has problems:
+
+9 Pods v1
+
+1 Pod v2
+
+Delete v2:
+
+kubectl delete deployment app-v2
+
+Users immediately return to Version 1.
+
+Canary vs Rolling Update
+Feature	Rolling Update	Canary
+Two versions run together	Briefly	Yes
+Traffic split	Not intentionally	Yes
+Easy rollback	Yes	Yes
+Test with small audience	No	Yes
+Monitor before full release	Limited	Yes
+Canary vs Blue-Green
+Blue-Green	Canary
+Two full environments	Two versions with partial rollout
+Switch all traffic at once	Gradually shift traffic
+More infrastructure required	Less infrastructure
+Fast rollback	Fast rollback
+Real-World Tools
+
+Canary deployments are commonly implemented using:
+
+Kubernetes Deployments (basic pod-percentage approach)
+NGINX Ingress (weighted routing)
+Istio (fine-grained traffic splitting, e.g., 95%/5%)
+Linkerd (service mesh)
+Argo Rollouts (advanced canary automation)
+Flagger (automated progressive delivery)
+Interview Questions
+What is a Canary Deployment?
+
+A Canary Deployment is a deployment strategy where a new application version is released to a small subset of users first.
+After monitoring health, performance, and error rates, traffic is gradually shifted to the new version. If issues are detected,
+the deployment is rolled back with minimal impact.
+
+Why is Canary better than deploying to everyone immediately?
+Reduces deployment risk.
+Limits the number of affected users.
+Allows real production testing.
+Enables fast rollback.
+Does Kubernetes support Canary Deployment out of the box?
+
+Basic canary: Yes. You can run two Deployments with the same Service selector and control the approximate traffic by changing replica counts.
+
+Advanced canary: For precise traffic percentages (like exactly 95%/5%), automated promotion, or analysis-based rollouts, you typically use tools such as Istio, NGINX Ingress, or Argo Rollouts. Kubernetes itself does not provide fine-grained traffic weighting between pods.
