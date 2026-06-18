@@ -164,16 +164,14 @@ v2
 
 Kubernetes Example
 
-Stable Deployment:
+1.vim v1-stable-deployment.yaml
 
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-v1
-
 spec:
-  replicas: 9
-
+  replicas: 3
   selector:
     matchLabels:
       app: myapp
@@ -184,51 +182,64 @@ spec:
       labels:
         app: myapp
         version: v1
-
     spec:
       containers:
-      - name: app
-        image: nginx:1.25
--------------------------------------------------
-
-Canary Deployment:
-
+      - name: v1-cont1
+        image: nginxdemos/hello
+        ports:
+        - containerPort: 80
+---------------------------------------------
+2.vim v2-canary-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-v2
-
 spec:
   replicas: 1
-
   selector:
     matchLabels:
-      app: myapp
+      app: my-app
       version: v2
 
   template:
     metadata:
       labels:
-        app: myapp
+        app: my-app
         version: v2
 
     spec:
       containers:
-      - name: app
-        image: nginx:1.26
-Service
+      - name: v2-cont2
+        image: nginxdemos/hello
+        ports:
+        - containerPort: 80
+-------------------------------------------------------
+vim v1-v2-service.yaml
+
 apiVersion: v1
 kind: Service
 metadata:
-  name: my-service
-
+  name: myapp-lb
+  namespace: canary-ns
 spec:
+  type: LoadBalancer
   selector:
     app: myapp
-
   ports:
   - port: 80
+    targetPort: 80
+
 ---------------------------------------------------------
+kubectl apply -f v1-canary-deployment.yaml -n canary-ns
+kubectl apply -f v2-canary-deployment.yaml -n canary-ns
+kubectl apply -f vim v1-v2-service.yaml -n canary-ns
+
+kubectl get deployments -n canary-ns
+kubectl get pods --show-labels -n canary-ns
+kubectl get endpoints myapp-lb -n canary-ns
+kubectl describe service myapp-lb -n canary-ns
+
+------------------------------------------------------
 Notice:
 
 The Service selects only:
