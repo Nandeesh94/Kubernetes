@@ -1,0 +1,471 @@
+Taints and Tolerations in Kubernetes  explain me completly. 
+Taints and Tolerations in Kubernetes (Complete Explanation)
+
+This is one of the most frequently asked Kubernetes interview topics. If you understand this well, scheduling becomes much easier.
+
+First, why do we need Taints?
+
+Imagine you have a Kubernetes cluster with three nodes.
+
+           Kubernetes Cluster
+
+        +-----------+
+        | Scheduler |
+        +-----------+
+              |
+      ---------------------
+      |        |         |
+    Node1    Node2     Node3
+
+Suppose:
+
+Node1 is a normal worker.
+Node2 has a GPU.
+Node3 is for databases.
+
+Without any restrictions, Kubernetes can schedule Pods on any node.
+
+Pod A ---> Node1
+Pod B ---> Node2
+Pod C ---> Node3
+Pod D ---> Node2
+
+But what if you want:
+
+Only GPU workloads on the GPU node.
+Only database Pods on the database node.
+
+That's where Taints come in.
+
+What is a Taint?
+
+A Taint is applied to a Node.
+
+It tells Kubernetes:
+
+"Don't schedule Pods here unless they explicitly tolerate this taint."
+
+Think of it like:
+
+Node says:
+
+🚫 Don't come here.
+What is a Toleration?
+
+A Toleration is applied to a Pod.
+
+It tells Kubernetes:
+
+"I know about that taint, and I'm allowed to run there."
+
+Think of it like:
+
+Pod says:
+
+✅ I have permission.
+Real-life analogy
+
+Imagine an office.
+
+The server room has a sign:
+
+AUTHORIZED PERSONNEL ONLY
+
+That's the Taint.
+
+An engineer has an access card.
+
+That's the Toleration.
+
+Without the card:
+
+❌ Entry denied.
+
+With the card:
+
+✅ Entry allowed.
+
+Taint Syntax
+key=value:effect
+
+Example:
+
+gpu=true:NoSchedule
+
+Meaning:
+
+Key = gpu
+
+Value = true
+
+Effect = NoSchedule
+Add a taint
+
+Suppose your node is:
+
+worker-2
+
+Run:
+
+kubectl taint nodes worker-2 gpu=true:NoSchedule
+
+Now the node has:
+
+gpu=true:NoSchedule
+
+Verify:
+
+kubectl describe node worker-2
+
+Output:
+
+Taints:
+
+gpu=true:NoSchedule
+What happens now?
+
+Cluster:
+
+             Scheduler
+
+                 |
+      -------------------------
+      |           |          |
+    Node1      Node2      Node3
+               (Tainted)
+
+New Pod:
+
+Pod A
+
+Scheduler checks Node2.
+
+Node2 says:
+
+I have a taint.
+
+Do you tolerate it?
+
+Pod says:
+
+No.
+
+Result:
+
+Pod is NOT scheduled.
+
+Scheduler chooses another node.
+
+Effects of Taints
+
+There are three effects.
+
+1. NoSchedule ⭐
+
+Most common.
+
+gpu=true:NoSchedule
+
+Meaning:
+
+Do NOT schedule new Pods.
+
+Existing Pods remain running.
+
+Example:
+
+Before taint:
+
+Node
+ ├── Pod A
+ ├── Pod B
+
+Apply taint:
+
+gpu=true:NoSchedule
+
+Result:
+
+Pod A → stays
+Pod B → stays
+
+New Pod → blocked
+2. PreferNoSchedule
+
+Soft rule.
+
+gpu=true:PreferNoSchedule
+
+Meaning:
+
+Try not to schedule Pods.
+
+If no other node is available:
+
+Scheduler may still place Pods here.
+
+Think of it as:
+
+Avoid if possible.
+3. NoExecute
+
+Strongest effect.
+
+gpu=true:NoExecute
+
+This does two things.
+
+1. Blocks new Pods
+
+AND
+
+2. Removes existing Pods
+
+Example:
+
+Before:
+
+Node
+
+Pod A
+
+Pod B
+
+Apply:
+
+gpu=true:NoExecute
+
+Result:
+
+Pod A → Evicted
+
+Pod B → Evicted
+
+unless they have a matching toleration.
+
+Comparison
+Effect	New Pods	Existing Pods
+NoSchedule	❌ Blocked	✅ Stay
+PreferNoSchedule	⚠ Try to avoid	✅ Stay
+NoExecute	❌ Blocked	❌ Evicted
+Pod without toleration
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+
+Scheduler checks:
+
+Node tainted?
+
+Yes
+
+Does Pod tolerate it?
+
+No
+
+Result:
+
+Pending
+Add toleration
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+
+spec:
+
+  tolerations:
+
+  - key: "gpu"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+  containers:
+
+  - name: nginx
+    image: nginx
+
+Now:
+
+Node:
+
+gpu=true:NoSchedule
+
+↓
+
+Pod tolerates it
+
+↓
+
+Scheduler allows it
+Scheduler Decision Flow
+Pod Created
+     |
+     V
+Scheduler checks all nodes
+     |
+     V
+Node has taint?
+     |
+  Yes
+     |
+Pod has matching toleration?
+     |
+   Yes -------> Pod can run
+     |
+    No
+     |
+Node rejected
+Very Important Interview Point
+
+A toleration does not force a Pod onto a node.
+
+It only permits the Pod to run there.
+
+Example:
+
+Cluster:
+
+Node1
+
+Node2 (gpu=true)
+
+Pod:
+
+Has gpu toleration
+
+Scheduler may still choose:
+
+Node1
+
+because toleration is only permission, not a placement rule.
+
+How do you force a Pod onto a specific node?
+
+Use Node Affinity or Node Selector together with taints.
+
+Example:
+
+Node
+
+gpu=true
+
+↓
+
+Taint:
+gpu=true:NoSchedule
+
+↓
+
+Label:
+gpu=true
+
+↓
+
+Pod
+
+NodeAffinity:
+gpu=true
+
+Toleration:
+gpu=true
+
+Now:
+
+Node Affinity selects the GPU node.
+Toleration allows the Pod onto the tainted node.
+
+This combination is common in production.
+
+Remove a taint
+kubectl taint nodes worker-2 gpu=true:NoSchedule-
+
+Notice the trailing -.
+
+Check again:
+
+kubectl describe node worker-2
+
+The taint should be gone.
+
+Built-in Taints
+
+Kubernetes automatically applies some taints.
+
+Node Not Ready
+node.kubernetes.io/not-ready
+Node Unreachable
+node.kubernetes.io/unreachable
+Memory Pressure
+node.kubernetes.io/memory-pressure
+Disk Pressure
+node.kubernetes.io/disk-pressure
+PID Pressure
+node.kubernetes.io/pid-pressure
+
+These help prevent new Pods from being scheduled onto unhealthy nodes.
+
+Real Production Examples
+1. GPU Nodes
+gpu=true:NoSchedule
+
+Only ML/AI workloads with the proper toleration run there.
+
+2. Database Nodes
+database=true:NoSchedule
+
+Only database Pods can be scheduled.
+
+3. Monitoring Nodes
+monitoring=true:NoSchedule
+
+Only monitoring tools like Prometheus or Grafana agents run there.
+
+4. Spot Instances
+spot=true:NoSchedule
+
+Only workloads that can tolerate interruptions are scheduled.
+
+Interview Questions
+Q1. What is a taint?
+
+A taint is applied to a Node to repel Pods unless they have a matching toleration.
+
+Q2. What is a toleration?
+
+A toleration is applied to a Pod to allow it to be scheduled on a tainted node.
+
+Q3. Does a toleration guarantee scheduling on a tainted node?
+
+No. It only allows scheduling. Use Node Affinity or Node Selector to prefer or require a specific node.
+
+Q4. Difference between NoSchedule and NoExecute?
+NoSchedule: Blocks new Pods only.
+NoExecute: Blocks new Pods and evicts existing Pods that don't tolerate the taint.
+Hands-on Lab (Recommended)
+
+To truly understand taints and tolerations, practice this sequence:
+
+Create a namespace:
+
+kubectl create namespace taint-demo
+Taint one of your worker nodes with NoSchedule.
+Deploy an NGINX Pod without a toleration and observe it stay in Pending.
+
+Describe the Pod:
+
+kubectl describe pod <pod-name> -n taint-demo
+
+Look for an event like:
+
+node(s) had untolerated taint
+Add the matching toleration to the Pod manifest and redeploy.
+Change the taint effect to NoExecute and observe how existing Pods behave.
+
+Working through these steps will make the scheduling behavior much easier to remember than just reading the theory.
