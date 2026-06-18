@@ -244,10 +244,12 @@ Pod B → Evicted
 unless they have a matching toleration.
 
 Comparison
-Effect	New Pods	Existing Pods
-NoSchedule	❌ Blocked	✅ Stay
+Effect	             New Pods	           Existing Pods
+NoSchedule  	❌ Blocked	           ✅ Stay
 PreferNoSchedule	⚠ Try to avoid	✅ Stay
-NoExecute	❌ Blocked	❌ Evicted
+NoExecute	           ❌ Blocked	           ❌ Evicted
+
+==================================================================================================================
 Pod without toleration
 apiVersion: v1
 kind: Pod
@@ -258,51 +260,41 @@ spec:
   - name: nginx
     image: nginx
 
+
 Scheduler checks:
-
 Node tainted?
-
 Yes
-
 Does Pod tolerate it?
-
 No
 
 Result:
-
 Pending
-Add toleration
+
+
+Add toleration:
+
 apiVersion: v1
 kind: Pod
 metadata:
   name: nginx
 
 spec:
-
   tolerations:
-
   - key: "gpu"
     operator: "Equal"
     value: "true"
     effect: "NoSchedule"
 
   containers:
-
   - name: nginx
     image: nginx
 
-Now:
-
+Now
 Node:
-
 gpu=true:NoSchedule
-
 ↓
-
 Pod tolerates it
-
 ↓
-
 Scheduler allows it
 Scheduler Decision Flow
 Pod Created
@@ -322,54 +314,35 @@ Pod has matching toleration?
     No
      |
 Node rejected
-Very Important Interview Point
 
+
+1.Very Important Interview Point
 A toleration does not force a Pod onto a node.
-
 It only permits the Pod to run there.
 
 Example:
-
 Cluster:
-
 Node1
-
 Node2 (gpu=true)
-
 Pod:
-
 Has gpu toleration
-
 Scheduler may still choose:
-
 Node1
-
 because toleration is only permission, not a placement rule.
-
 How do you force a Pod onto a specific node?
-
 Use Node Affinity or Node Selector together with taints.
 
 Example:
-
 Node
-
 gpu=true
-
 ↓
-
 Taint:
 gpu=true:NoSchedule
-
 ↓
-
 Label:
 gpu=true
-
 ↓
-
 Pod
-
 NodeAffinity:
 gpu=true
 
@@ -431,6 +404,171 @@ Only monitoring tools like Prometheus or Grafana agents run there.
 spot=true:NoSchedule
 
 Only workloads that can tolerate interruptions are scheduled.
+
+
+================================================================================================================================
+
+Real Examples Taints and Tolarations:
+
+ubuntu@ip-172-31-32-247:~$ kubectl get nodes
+NAME                             STATUS   ROLES    AGE    VERSION
+ip-192-168-17-51.ec2.internal    Ready    <none>   4h8m   v1.34.8-eks-3385e9b
+ip-192-168-35-138.ec2.internal   Ready    <none>   4h8m   v1.34.8-eks-3385e9b
+
+1.Add taint:
+C:kubectl taint nodes ip-192-168-17-51.ec2.internal gpu=true:NoSchedule
+
+2.View taints:
+C:kubectl describe nodes ip-192-168-17-51.ec2.internal | grep -i taint
+   Taints:             gpu=true:NoSchedule
+
+3.Remove taint:
+C:kubectl taint nodes ip-192-168-17-51.ec2.internal gpu=true:NoSchedule-
+
+4.Change (overwrite) an existing taint:
+Suppose the node has:
+gpu=true:NoExecute
+
+and you want:
+gpu=true:NoSchedule
+
+Use:
+kubectl taint nodes <node-name> gpu=true:NoSchedule --overwrite
+
+Or remove the old taint first:
+kubectl taint nodes <node-name> gpu=true:NoExecute-
+kubectl taint nodes <node-name> gpu=true:NoSchedule
+
+---------------------------------------------------------
+
+2.Tolerations:
+-------------
+
+vim v1-stable-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-v1
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: myapp
+      version: v1
+
+  template:
+    metadata:
+      labels:
+        app: myapp
+        version: v1
+    spec:
+      tolerations:
+      - key: "gpu"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+
+
+      containers:
+      - name: v1-cont1
+        image: nginxdemos/hello
+        ports:
+        - containerPort: 80
+
+kubectl apply -f v1-stable-deployment.yaml -n canary-ns
+
+--------------------------------------------------
+
+This object will Tolartion:
+
+tolerations:
+- key: "gpu"
+  operator: "Equal"
+  value: "true"
+  effect: "NoSchedule"
+
+-------------------------------------------------
+=============================================================================================
+# View nodes
+kubectl get nodes
+
+# Add taint
+kubectl taint nodes <node-name> gpu=true:NoSchedule
+
+# View taints
+kubectl describe node <node-name> | grep -i taint
+
+# Remove taint
+kubectl taint nodes <node-name> gpu=true:NoSchedule-
+
+# Overwrite taint
+kubectl taint nodes <node-name> gpu=true:NoSchedule --overwrite
+
+# Apply deployment
+kubectl apply -f deployment.yaml
+
+# View pods
+kubectl get pods -o wide
+
+# Describe pod
+kubectl describe pod <pod-name>
+
+# Describe node
+kubectl describe node <node-name>
+
+=============================================================================================
+Taint Effects
+1. NoSchedule:
+
+Meaning
+Do not schedule NEW pods on this node.
+Existing pods continue running.
+
+Example
+kubectl taint nodes ip-192-168-17-51.ec2.internal gpu=true:NoSchedule
+
+2. PreferNoSchedule
+Meaning
+Avoid scheduling pods here if possible.
+
+If Kubernetes has no better node,
+it may still schedule the pod.
+
+Example
+kubectl taint nodes ip-192-168-17-51.ec2.internal gpu=true:PreferNoSchedule
+ 
+3. NoExecute
+Meaning
+Do not schedule new pods.
+Also evict (remove) existing pods
+that do not tolerate this taint.
+
+Example
+kubectl taint nodes ip-192-168-17-51.ec2.internal gpu=true:NoExecute
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===============================================================================================================================
+
+
+
+
 
 Interview Questions
 Q1. What is a taint?
