@@ -1,1 +1,622 @@
+1.Node Selector and Node Affinity in Kubernetes (Complete Explanation):
+
+1.Node Selector:
+-------------
+
+These topics are very commonly asked in Kubernetes interviews, especially together with Taints & Tolerations.
+
+A good way to remember them is:
+
+Feature	Purpose
+Node Selector	Choose a node using simple labels
+Node Affinity	Choose a node using advanced rules
+Taints	Keep unwanted Pods away from a node
+Tolerations	Allow a Pod onto a tainted node
+Why do we need Node Selector?
+
+Suppose your cluster has three worker nodes.
+
+                Kubernetes Cluster
+
+                  Scheduler
+                      |
+        ---------------------------------
+        |               |               |
+     Worker-1       Worker-2        Worker-3
+
+Imagine:
+
+Worker-1 → SSD Disk
+Worker-2 → GPU
+Worker-3 → High Memory
+
+Now you have an AI application.
+
+Where should it run?
+
+Obviously:
+
+GPU Node
+
+But Kubernetes doesn't know that.
+
+Without instructions, the scheduler may place it anywhere.
+
+AI Pod
+
+↓
+
+Worker-1 ❌
+
+This is where Node Selector comes in.
+
+What is Node Selector?
+
+A Node Selector is the simplest way to tell Kubernetes:
+
+"Run this Pod only on nodes with this label."
+
+Step 1: Label the Node
+
+Suppose Worker-2 has a GPU.
+
+Add a label:
+
+kubectl label node worker-2 gpu=true
+
+Verify:
+
+kubectl get nodes --show-labels
+
+Example:
+
+worker-1
+
+disk=ssd
+worker-2
+
+gpu=true
+worker-3
+
+memory=high
+Step 2: Create the Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ai-app
+
+spec:
+
+  nodeSelector:
+    gpu: "true"
+
+  containers:
+  - name: app
+    image: nginx
+
+Scheduler:
+
+Node-1
+
+gpu=true ?
+
+No
+
+Skip.
+
+Node-2
+
+gpu=true ?
+
+Yes
+
+Schedule Pod.
+
+Scheduler Flow
+Pod Created
+      |
+      ▼
+Check Node-1
+
+gpu=true?
+
+No
+      |
+Reject
+      |
+      ▼
+Check Node-2
+gpu=true?
+Yes
+      |
+Schedule Pod
+Advantages
+Very easy.
+Simple.
+Fast.
+
+Limitations:
+Suppose you need:
+GPU
+AND
+SSD
+AND
+Zone=us-east-1a
+
+Node Selector becomes limiting.
+It only supports exact label matches.
+No advanced logic.
+----------------------------------------------------------------------------------------
+
+
+2.Node Affinity:
+------ -------
+
+Node Affinity
+
+Node Affinity is the advanced version of Node Selector.
+
+Think of it like SQL queries.
+
+Instead of:
+
+gpu=true
+
+you can say:
+
+gpu=true
+
+AND
+
+zone=us-east-1a
+
+or
+
+disk in (ssd,nvme)
+
+or
+
+NOT gpu=true
+
+Much more powerful.
+
+Two Types of Node Affinity
+1. Required
+
+Hard rule.
+
+Pod must satisfy it.
+
+If no node matches:
+
+Pending
+2. Preferred
+
+Soft rule.
+
+Scheduler tries.
+
+If unavailable:
+
+It chooses another node.
+
+Required Node Affinity
+
+Suppose:
+
+Node-1
+
+disk=ssd
+Node-2
+
+gpu=true
+
+Pod:
+
+spec:
+
+  affinity:
+
+    nodeAffinity:
+
+      requiredDuringSchedulingIgnoredDuringExecution:
+
+        nodeSelectorTerms:
+
+        - matchExpressions:
+
+          - key: gpu
+            operator: In
+            values:
+
+            - "true"
+
+Scheduler:
+
+Node-1
+
+gpu=true?
+
+No
+
+Reject.
+
+Node-2
+
+gpu=true?
+
+Yes
+
+Schedule.
+
+Why is it called
+RequiredDuringSchedulingIgnoredDuringExecution?
+
+Break it into parts.
+
+Required
+
+Must satisfy.
+
+Otherwise:
+
+Pending.
+
+DuringScheduling
+
+Only checked while placing the Pod.
+
+IgnoredDuringExecution
+
+Suppose:
+
+Initially:
+
+Node
+
+gpu=true
+
+Pod scheduled.
+
+Later someone removes the label.
+
+Now:
+
+gpu label removed
+
+Will Kubernetes evict the Pod?
+
+No.
+
+Because:
+
+IgnoredDuringExecution
+
+It ignores label changes after scheduling.
+
+Preferred Node Affinity
+
+Example:
+
+affinity:
+
+  nodeAffinity:
+
+    preferredDuringSchedulingIgnoredDuringExecution:
+
+    - weight: 100
+
+      preference:
+
+        matchExpressions:
+
+        - key: gpu
+
+          operator: In
+
+          values:
+
+          - "true"
+
+Meaning:
+
+Try GPU.
+
+If unavailable,
+
+run somewhere else.
+Match Expressions
+
+This is where Node Affinity becomes powerful.
+
+Operator = In
+key: gpu
+
+operator: In
+
+values:
+
+- true
+
+Meaning:
+
+gpu=true
+Operator = NotIn
+operator: NotIn
+
+Meaning:
+
+NOT gpu=true
+Exists
+operator: Exists
+
+Means:
+
+Label must exist.
+
+Any value.
+
+Example:
+
+gpu=anything
+
+Works.
+
+DoesNotExist
+operator: DoesNotExist
+
+Means:
+
+Node should NOT have this label.
+Gt
+cpu > 8
+Lt
+memory < 64
+Node Selector vs Node Affinity
+Node Selector
+nodeSelector:
+
+  gpu: "true"
+
+Very simple.
+
+Node Affinity
+
+affinity:
+
+ nodeAffinity:
+
+  requiredDuringSchedulingIgnoredDuringExecution:
+
+Advanced.
+
+Supports:
+
+AND
+OR
+In
+NotIn
+Exists
+Preferred rules
+Interview Question
+
+Can a Pod have both?
+
+NodeSelector
+
++
+
+NodeAffinity
+
+Yes.
+
+Both conditions must match.
+
+Node Affinity + Taints
+
+This is used in production.
+
+Suppose:
+
+GPU Node.
+
+You want:
+
+Only AI Pods.
+
+First:
+
+Label node.
+
+kubectl label node worker-2 gpu=true
+
+Second:
+
+Taint node.
+
+kubectl taint node worker-2 gpu=true:NoSchedule
+
+Now create Pod.
+
+spec:
+
+ nodeSelector:
+
+   gpu: "true"
+
+ tolerations:
+
+ - key: gpu
+   operator: Equal
+   value: "true"
+   effect: NoSchedule
+
+Flow:
+
+Scheduler
+
+↓
+
+Node has gpu=true label?
+
+Yes
+
+↓
+
+NodeSelector matches
+
+↓
+
+Node has taint?
+
+Yes
+
+↓
+
+Pod has toleration?
+
+Yes
+
+↓
+
+Pod scheduled
+
+This is exactly how GPU workloads are commonly isolated.
+
+Real Production Example
+
+Cluster:
+
+Node-1
+
+gpu=true
+Node-2
+
+gpu=false
+
+AI Application:
+
+Needs GPU
+
+Configuration:
+
+Node:
+
+Label
+
+gpu=true
+
+Node:
+
+Taint
+
+gpu=true:NoSchedule
+
+Pod:
+
+NodeAffinity
+
+gpu=true
+
+Pod:
+
+Toleration
+
+gpu=true
+
+Result:
+
+Only AI Pods
+
+↓
+
+Only GPU Node
+Interview Comparison Table
+Feature	Node Selector	Node Affinity
+Complexity	Simple	Advanced
+Label matching	Exact only	Many operators
+AND/OR support	No	Yes
+Preferred rules	No	Yes
+Required rules	No	Yes
+Recommended	Small clusters	Production
+Node Selector vs Node Affinity vs Taints
+Feature	Purpose
+Node Selector	Choose a node by exact label.
+Node Affinity	Choose a node using flexible matching rules (required or preferred).
+Taint	Repel Pods from a node unless they have permission.
+Toleration	Permit a Pod to run on a tainted node.
+
+Think of scheduling in two steps:
+
+Selection: Which nodes are eligible?
+Node Selector or Node Affinity answers this.
+Permission: Is the Pod allowed onto that node?
+Taints and Tolerations answer this.
+Complete Scheduling Flow
+                    Pod Created
+                         │
+                         ▼
+        Does the node match NodeSelector/Affinity?
+                         │
+              No ─────────────► Skip node
+                         │
+                        Yes
+                         │
+                         ▼
+              Does the node have a taint?
+                         │
+               No ─────────────► Schedule Pod
+                         │
+                        Yes
+                         │
+                         ▼
+          Does the Pod have a matching toleration?
+                         │
+               No ─────────────► Reject node
+                         │
+                        Yes
+                         │
+                         ▼
+                  Schedule the Pod
+Hands-on Example Using Your EKS Cluster
+
+You have two worker nodes:
+
+ip-192-168-17-51.ec2.internal
+ip-192-168-35-138.ec2.internal
+
+You can practice as follows:
+
+1. Label one node
+kubectl label node ip-192-168-17-51.ec2.internal gpu=true
+2. Verify
+kubectl get nodes --show-labels
+3. Create a Pod with a nodeSelector
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-pod
+  namespace: canary-ns
+spec:
+  nodeSelector:
+    gpu: "true"
+  containers:
+  - name: nginx
+    image: nginx
+
+Check where it landed:
+
+kubectl get pod gpu-pod -o wide -n canary-ns
+
+It should run on ip-192-168-17-51.ec2.internal.
+
+Then replace nodeSelector with nodeAffinity to achieve the same result using:
+
+requiredDuringSchedulingIgnoredDuringExecution
+
+This hands-on comparison is one of the best ways to understand why Node Affinity is considered the more flexible, production-ready option.
+
+
+
+
 
