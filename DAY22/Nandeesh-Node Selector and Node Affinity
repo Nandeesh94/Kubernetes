@@ -152,6 +152,92 @@ No advanced logic.
 2.Node Affinity:
 ------ -------
 
+ubuntu@ip-172-31-32-247:~$ cat nodeaffinity.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodeaffinit
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: gpu
+            operator: In
+            values:
+              - "true"
+
+          - key: topology.kubernetes.io/region
+            operator: In
+            values:
+              - "us-east-1"
+
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values:
+              - "us-east-1c"
+
+  containers:
+  - name: nodeaffini-cont1
+    image: nginx
+    ports:
+    - containerPort: 80
+ubuntu@ip-172-31-32-247:~$
+----------------------------------------------------------------------------------------------------------
+
+
+
+Example from your EKS cluster
+
+Your node has:
+
+gpu=true
+topology.kubernetes.io/region=us-east-1
+topology.kubernetes.io/zone=us-east-1c
+
+So your affinity should use:
+
+matchExpressions:
+- key: topology.kubernetes.io/region
+  operator: In
+  values:
+  - us-east-1
+
+- key: topology.kubernetes.io/zone
+  operator: In
+  values:
+  - us-east-1c
+Can I still use region and zone?
+
+Yes. They are just custom labels.
+
+For example:
+
+kubectl label node worker1 region=us-east-1
+kubectl label node worker1 zone=us-east-1c
+
+Then this works:
+
+- key: region
+  operator: In
+  values:
+  - us-east-1
+
+But those labels are your own, not Kubernetes-standard.
+
+Rule of thumb
+topology.kubernetes.io/* → Standard labels automatically provided by Kubernetes/cloud providers (recommended).
+region, zone, env, gpu, disk → Custom labels that you create and manage yourself.
+
+
+
+
+
+
+
+
 Node Affinity
 
 Node Affinity is the advanced version of Node Selector.
