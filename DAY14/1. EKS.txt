@@ -134,7 +134,7 @@ eksctl create cluster \
 
 
 
-eksctl delete nodegroup --cluster=Nandeesh-cluster --region=us-east-1 --name=large-ng1
+eksctl delete nodegroup --cluster=nandeesh-cluster --region=us-east-1 --name=large-ng1
 
 
 eksctl delete cluster Nandeesh-cluster --region us-east-1
