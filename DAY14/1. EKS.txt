@@ -120,11 +120,11 @@ Then the two t2.small worker nodes will terminate automatically and EKS charges 
 
 =================================================================================================================================
 
-
-eksctl create nodegroup \
-  --cluster=Nandeesh-cluster \
+eksctl create cluster \
+  --name=nandeesh-cluster \
   --region=us-east-1 \
-  --name=large-ng1 \
+  --zones=us-east-1a,us-east-1b \
+  --nodegroup-name=large-ng1 \
   --node-type=t2.medium \
   --nodes=2 \
   --nodes-min=2 \
@@ -133,10 +133,12 @@ eksctl create nodegroup \
   --managed
 
 
+
 eksctl delete nodegroup --cluster=Nandeesh-cluster --region=us-east-1 --name=large-ng1
 
 
 eksctl delete cluster Nandeesh-cluster --region us-east-1
+
 
 
 
